@@ -16,6 +16,8 @@ var five = require("johnny-five"), board, slider, scalingRange;
 board = new five.Board();
 
 board.on("ready", function() {
+	
+	console.log("BOARD IS READY!");
 
 	scalingRange = [ 0, 90 ];
 
@@ -32,6 +34,8 @@ board.on("ready", function() {
 	
 
 	io.sockets.on('connection', function (socket) {
+		
+		console.log("SOCKET CONNECTION MADE!");
 		
 		led.off();						
 					
