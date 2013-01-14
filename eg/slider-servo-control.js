@@ -21,6 +21,8 @@ board.on("ready", function() {
   // The slider's value will be scaled to match the servo's movement range
 
   slider.scale( scalingRange ).on("slide", function( err, value ) {
+	
+	console.log('SLIDED!')
 
     servo.move( Math.floor(this.value) );
 

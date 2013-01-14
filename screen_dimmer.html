@@ -1,0 +1,62 @@
+<html>
+<head>	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	
+	<style>
+		.black-box {
+			background: black;
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: -1;
+		}
+		
+		#percentage.dark {
+			color: #fff;
+		}
+		
+	</style>
+
+
+</head>
+<body>
+
+<div class="black-box">
+</div>
+
+<span id="percentage">100%</span>
+
+</body>
+
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  var socket = io.connect('http://local.host:8080'), slideVal;
+  socket.on('news', function (data) {
+    socket.emit('my other event', { my: 'data' });
+  });
+
+  socket.on('slider', function (data) {
+	// console.log('slided')
+	slideVal = data['slidevalue'];
+	console.log(slideVal);
+	
+	if (slideVal < 50) {
+		$('#percentage').removeClass('dark');
+	} else {
+		$('#percentage').addClass('dark');
+	}
+	
+	$('#percentage').text(slideVal+"%");
+	
+	$(".black-box").css({ opacity: slideVal/100 });
+
+    // socket.emit('my other event', { my: 'data' });
+  });
+
+</script>
+
+</html>

@@ -1,0 +1,194 @@
+<html>
+<head>	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	
+	<style>
+	
+		body {
+			background: #ddd;
+		}
+	
+		.fuel-wrapper {
+			width: 450px;
+			height: 450px;
+			position: relative;
+			float: left;
+		}
+		
+		.fuel-pin {
+			position: absolute;
+			top: 262px;
+			left: 72px;
+			background: black;
+			width: 306px;
+			height: 50px;
+			background: url("/images/fuel-pin.png") no-repeat center center;
+			-webkit-transform: rotate(45deg);
+		}
+		
+		.fuel-gauge {
+			top: 0;
+			right: 0;
+			position: absolute;
+			width: 450px;
+			height: 450px;
+			background: url("/images/fuel-gauge.png") no-repeat center center;
+		}
+		
+		#percentage.dark {
+			color: #fff;
+		}
+		
+		.led-switch {
+			padding: 5px 10px;
+			background: blue;
+			color: white;
+			display: inline-block;
+			cursor: pointer;
+		}
+				
+		.blinker-wrapper {
+			float: left;
+			margin-top: 140px;
+			width: 150px;
+			height: 170px;
+		}
+		
+		.blinker {
+			display: none;
+			width: 150px;
+			height: 170px;
+		}
+		
+		.blinker-left {
+			background: url("/images/blinker-left.png") no-repeat center center;
+		}
+
+		.blinker-right {
+			background: url("/images/blinker-right.png") no-repeat center center;
+		}
+		
+		
+	</style>
+
+
+</head>
+<body>
+	
+<span id="percentage">100%</span>
+
+<div class="led-switch" data-status="off">LED TOGGLE</div>
+
+<div class="blinker-wrapper">
+	<div class="blinker blinker-left"></div>
+</div>
+
+<div class="fuel-wrapper">
+	<div class="fuel-gauge"></div>
+	<div class="fuel-pin"></div>
+</div>
+
+<div class="blinker-wrapper">
+	<div class="blinker blinker-right"></div>
+</div>
+
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+	function getRotationDegrees(obj) {
+	    var matrix = obj.css("-webkit-transform") ||
+	    obj.css("-moz-transform")    ||
+	    obj.css("-ms-transform")     ||
+	    obj.css("-o-transform")      ||
+	    obj.css("transform");
+	    if(matrix !== 'none') {
+	        var values = matrix.split('(')[1].split(')')[0].split(',');
+	        var a = values[0];
+	        var b = values[1];
+	        var angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
+	    } else { var angle = 0; }
+	    return angle;
+	}
+
+	var socket = io.connect('http://local.host:8080'), slideVal, percent, originalAngle, newAngle, ledSwitch, blinker, strobe;
+	
+	// fuel gauge
+	
+	originalAngle = getRotationDegrees($('.fuel-pin'));
+	
+	socket.on('slider', function (data) {
+		
+		slideVal = data['slidevalue'];
+		percent = slideVal/0.9;
+		$('#percentage').text(percent.toFixed()+"%");
+
+		newAngle = originalAngle + slideVal;
+		$('.fuel-pin').css({ WebkitTransform: 'rotate(' + newAngle + 'deg)'});
+
+	});
+	
+	// LED
+	
+	ledSwitch = $('.led-switch');
+	
+	// blinker = $('.blinker-left');
+	
+	var strobeOn = function(side){
+		blinker = $('.blinker-'+side);
+	    strobe = self.setInterval(function(){
+			console.log('toggle');
+			socket.emit('led-toggle');
+			blinker.toggle();
+	    }, 400);	
+	}
+	
+	var strobeOff = function(side){
+		blinker = $('.blinker-'+side);
+		blinker.hide();
+		socket.emit('led-off');
+		strobe = window.clearInterval(strobe);
+	}
+			
+	// ledSwitch.on('click',function(){
+	// 	el = $(this);
+	// 			
+	// 	if (el.data['status'] == 'on') {
+	// 		console.log('turning LED off')
+	// 		el.data['status'] = 'off';
+	// 		socket.emit('led-off');
+	// 	} else {
+	// 		console.log('turning LED on')
+	// 		el.data['status'] = 'on';
+	// 		socket.emit('led-on');
+	// 	}
+	// })
+	
+	// BUTTON
+	
+	socket.on('left-button-down', function () {
+		console.log('button-down');
+		strobeOn('left');
+	});
+
+	socket.on('left-button-up', function () {
+		console.log('button-up');
+		strobeOff('left');
+	});
+	
+	socket.on('right-button-down', function () {
+		console.log('button-down');
+		strobeOn('right');
+	});
+
+	socket.on('right-button-up', function () {
+		console.log('button-up');
+		strobeOff('right');
+	});
+		
+
+</script>
+
+</html>
